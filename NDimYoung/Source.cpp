@@ -45,6 +45,7 @@ typedef struct _bitStr
 	}
 }BitLine;
 
+//profit: ~7.5% memory
 #pragma pack(1)
 typedef struct _bitBool
 {
