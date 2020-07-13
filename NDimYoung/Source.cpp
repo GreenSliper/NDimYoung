@@ -639,6 +639,7 @@ int main(int argc, char* argv[])
 		}
 		printf("\n\n\n\n");
 	}*/
+	//create simple graph
 	vector<vector<YoungNDim_SimpleNode*>> graph = CreateGraph(new YoungNDim_SimpleNode(new YoungNDim(1, 4)), 9);
 	for (int lvl = 0; lvl < graph.size(); lvl++)
 	{
