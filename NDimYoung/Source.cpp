@@ -231,7 +231,7 @@ public:
 			if (oCorners->GetBit(i))
 			{
 				Young2D* child = Clone(); 
-				child->AddCube(&i);	//unacceptable for higher dimensions, bc will cause bitline errors
+				child->AddCube(&i, false, true);	//unacceptable for higher dimensions, bc will cause bitline errors
 				children.push_back(child);
 			}
 		//Maybe add later
@@ -550,7 +550,7 @@ public:
 		}
 		children.clear();
 		return results;
-	}
+ 	}
 
 	bool operator==(const YoungNDim_SimpleNode& other)
 	{
@@ -664,10 +664,10 @@ int main(int argc, char* argv[])
 	bool infiniteGen = false;
 	int x = 0;
 	int graphDim = 4, lvls;
-
+	IYoung* startDiag;
+	//create filename
 	string fileName;
 	time_t _tm = time(NULL);
-	//create filename
 	fileName = string(asctime(localtime(&_tm)));
 	fileName.pop_back();
 	fileName = string("graph ") + fileName + string(".txt");
@@ -681,7 +681,11 @@ int main(int argc, char* argv[])
 		fileName = to_string(graphDim) + "D " + fileName;
 		ofstream os(fileName);
 		os.close();
-		CreateGraph(new YoungNDim_SimpleNode(new YoungNDim(1, graphDim)), 999, fileName);
+		if (graphDim == 2)
+			startDiag = new Young2D(1);
+		else
+			startDiag = new YoungNDim(1, graphDim);
+		CreateGraph(new YoungNDim_SimpleNode(startDiag), 999, fileName);
 		return 0;
 	}
 	//ask dimensions count
@@ -708,15 +712,20 @@ int main(int argc, char* argv[])
 			cout << endl << "Please, select option 1 or 2" << endl;
 	} while (ans < 1 || ans > 2);
 
+	if (graphDim == 2)
+		startDiag = new Young2D(1);
+	else
+		startDiag = new YoungNDim(1, graphDim);
+
 	switch (ans)
 	{
 	case 1:
 		fileName = to_string(graphDim) + "D " + fileName;
-		CreateGraph(new YoungNDim_SimpleNode(new YoungNDim(1, graphDim)), lvls, fileName);
+		CreateGraph(new YoungNDim_SimpleNode(startDiag), lvls, fileName);
 		break;
 	case 2: 
 		//create simple graph
-		vector<vector<YoungNDim_SimpleNode*>> graph = CreateGraph(new YoungNDim_SimpleNode(new YoungNDim(1, graphDim)), lvls);
+		vector<vector<YoungNDim_SimpleNode*>> graph = CreateGraph(new YoungNDim_SimpleNode(startDiag), lvls);
 		//print graph
 		ExportGraph(graph, cout);
 		break;
