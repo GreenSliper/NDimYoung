@@ -9,23 +9,11 @@
 #include <time.h>
 #include <algorithm>
 
-
 using namespace std;
 #define TODO_METHOD { cout<<"Method unimplemented."<<endl;}
 
 //char constants
 const char MAIN_DELIM = ' ';
-//string constants
-const string COLUMN_DELIM = " ";
-const string LAYER2D_DELIM = ",";
-const string LAYER3D_DELIM = ";";
-const string LEX_DELIM = "|";
-const string CONNECTED_DELIM = " ";
-//lex names
-const string lexDimension = "dim";
-const string lexLevel = "level";
-const string lexId = "id";
-const string lexConnected = "connected";
 
 /*----------------------------------------------------------------
 |	this struct is used instead of vector<bool/int>, is going to save 
@@ -187,8 +175,6 @@ public:
 			os << (int)columns[i] << MAIN_DELIM;
 	}
 
-
-
 	Young2D* Clone()
 		override
 	{
@@ -257,7 +243,7 @@ public:
 
 class YoungNDim : public IYoung {
 public:
-	//TOTAL: 9 OVERRIDES
+	//TOTAL: 11 OVERRIDES
 	vector<IYoung*> layers;
 	BitBool* canAddLayer;
 	//recursive constructor
@@ -399,18 +385,6 @@ public:
 		}
 	}
 
-	/*
-	TODO: REPLACE WITH CHAR*
-	string ToString()
-	{
-		string result = "";
-		int i;
-		for (i = 0; i < (int)layers.size() - 1; i++)
-			result += layers[i].ToString() + LAYER2D_DELIM;
-		result += layers[i].ToString();
-		return result;
-	}*/
-
 	//recursive cloning
 	YoungNDim* Clone()
 		override
@@ -426,7 +400,7 @@ public:
 	}
 
 	//clone this whole object and replace one layer with the given one
-	//the given instance will be used, so copy it before passing
+	//the given replaceLayer will be used, so copy it before passing
 	YoungNDim* Clone(IYoung* replaceLayer, int index)
 	{
 		YoungNDim* newObj = new YoungNDim();
