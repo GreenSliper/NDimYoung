@@ -8,6 +8,7 @@
 #include "InfInt.h"
 #include <time.h>
 #include <algorithm>
+#include <omp.h>
 
 using namespace std;
 #define TODO_METHOD { cout<<"Method unimplemented."<<endl;}
@@ -33,7 +34,45 @@ typedef struct _bitStr
 	{
 		line ^= (-bit ^ line) & (1ULL << index);
 	}
-}BitLine;
+}BitLine_Old;
+
+class BitLine {
+public:
+	int* line;
+	int size;
+
+	BitLine(int length)
+	{
+		size = length;
+		line = (int*)malloc(length);
+	}
+
+	~BitLine()
+	{
+		free(line);
+	}
+
+	void Resize(int newSize)
+	{
+		size = newSize;
+		line = (int*)realloc(line, newSize);
+	}
+
+	void CopyLineFrom(BitLine* other)
+	{
+		memcpy(line, other->line, other->size);
+	}
+
+	int GetBit(int index)
+	{
+		return (*line >> index) & 1;
+	}
+
+	void SetBit(int index, int bit)
+	{
+		*line ^= (-bit ^ *line) & (1ULL << index);
+	}
+};
 
 //profit: ~7.5% memory
 #pragma pack(1)
@@ -89,7 +128,7 @@ public:
 	Young2D(mainType startCubesInZeroPoint) {
 		dimensions = 2;
 		columns[0] = startCubesInZeroPoint;
-		oCorners = new BitLine();
+		oCorners = new BitLine(2);
 		oCorners->SetBit(0, 1);
 		if (startCubesInZeroPoint > 0)
 			oCorners->SetBit(1, 1); //bit will be ovewritten if previous layer is one-column
@@ -171,16 +210,17 @@ public:
 	void Print(ostream& os)
 		override
 	{
-		for (int i = 0; i < (int)columns.size(); i++)
+		for (int i = 0; i < (int)columns.size() - 1; i++)
 			os << (int)columns[i] << MAIN_DELIM;
+		os << (int)columns[columns.size() - 1];
 	}
 
 	Young2D* Clone()
 		override
 	{
 		Young2D* newObj = new Young2D();
-		newObj->oCorners = new BitLine();
-		*(newObj->oCorners) = *oCorners;
+		newObj->oCorners = new BitLine(oCorners->size+1);
+		newObj->oCorners->CopyLineFrom(oCorners);
 		newObj->dimensions = 2;
 		newObj->columns = columns;
 		return newObj;
@@ -378,11 +418,13 @@ public:
 	void Print(ostream& os)
 		override
 	{
-		for (int i = 0; i < (int)layers.size(); i++)
+		for (int i = 0; i < (int)layers.size()-1; i++)
 		{
 			layers[i]->Print(os);
-			os << MAIN_DELIM;
+			for (int j = 1; j < dimensions; j++)
+				os << MAIN_DELIM;
 		}
+		layers[layers.size() - 1]->Print(os);
 	}
 
 	//recursive cloning
@@ -446,7 +488,7 @@ public:
 			YoungNDim* copy = Clone();
 			if (copy->AddCube(potentialCoords[i], false, true))
 				children.push_back(copy);
-			else {
+			/*else {
 				//just in case, this part never executes
 				cout << "ERR:" << endl << "_______________________" << endl << "DIAG:";
 				copy->Print(cout);
@@ -455,7 +497,7 @@ public:
 					printf("%d ", potentialCoords[i][x]);
 				cout << endl << "_______________________"<<endl;
 				delete copy;
-			}
+			}*/
 			delete[] potentialCoords[i];
 		}
 		potentialCoords.clear();
@@ -577,6 +619,7 @@ vector<vector<YoungNDim_SimpleNode*>> CreateGraph(YoungNDim_SimpleNode* rootDiag
 		ExportGraphLevel(levels[0], os);
 		os.close();
 	}
+	int streamNum = 4;
 	//iterate & create new levels based on previous ones
 	for (int i = 1; i < levelCount; i++)
 	{
@@ -600,6 +643,7 @@ vector<vector<YoungNDim_SimpleNode*>> CreateGraph(YoungNDim_SimpleNode* rootDiag
 			levels[i].insert(levels[i].end(), children.begin(), children.end());
 			//go to next ancestor
 		}
+		levels[i - 1].clear();
 		//this level won't be expanded
 		levels[i].shrink_to_fit();
 		//export on fly
@@ -635,6 +679,7 @@ int main(int argc, char* argv[])
 		children[lvl]->node->Print();
 		printf("\n");
 	}*/
+
 	bool infiniteGen = false;
 	int x = 0;
 	int graphDim = 4, lvls;
