@@ -2,3 +2,8 @@ NUMBER 1
 DIMENSIONS: 4
 DEPTH: 9
 TIME: 8.5 sec, 7 Mb / Original 4d program: 23 sec, 52 Mb
+
+NUMBER 2
+DIMENSIONS: 4
+DEPTH: 9
+TIME: 7.2 sec, 4 Mb
