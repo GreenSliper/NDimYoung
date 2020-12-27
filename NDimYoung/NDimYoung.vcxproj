@@ -118,7 +118,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BigInt.cpp" />
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="BitLine.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Young2D.cpp" />
+    <ClCompile Include="YoungNDim.cpp" />
+    <ClCompile Include="TableSet.cpp" />
+    <ClCompile Include="Tableaux2D.cpp" />
+    <ClCompile Include="YoungNDim_SimpleNode.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BitLine.h" />
+    <ClInclude Include="Tableaux2D.h" />
+    <ClInclude Include="TableSet.h" />
+    <ClInclude Include="YoungNDim.h" />
+    <ClInclude Include="YoungNDim_SimpleNode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
