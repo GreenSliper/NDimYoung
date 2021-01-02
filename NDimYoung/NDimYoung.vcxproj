@@ -119,6 +119,7 @@
   <ItemGroup>
     <ClCompile Include="BigInt.cpp" />
     <ClCompile Include="BitLine.cpp" />
+    <ClCompile Include="CommonMethods.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Young2D.cpp" />
     <ClCompile Include="YoungNDim.cpp" />
@@ -128,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BitLine.h" />
+    <ClInclude Include="CommonMethods.h" />
     <ClInclude Include="Tableaux2D.h" />
     <ClInclude Include="TableSet.h" />
     <ClInclude Include="YoungNDim.h" />

@@ -8,9 +8,24 @@
 #include "InfInt.h"
 #include <time.h>
 #include <algorithm>
+#include <iostream>
+#include <string>
 #include "YoungNDim.h"
+#include "CommonMethods.h"
 
 using namespace std;
+
+Young2D::Young2D(istream &is) : Young2D(0)
+{
+	string dg;
+	cout << "Enter column heights, split by [SPACE]:" << endl;
+	char c;
+	getline(is, dg);
+	vector<string> dgNms = split(dg, " ");
+	columns = vector<mainType>(dgNms.size());
+	for (int i = 0; i < dgNms.size(); i++)
+		columns[i] = stoi(dgNms[i]);
+}
 
 Young2D::Young2D(mainType startCubesInZeroPoint) {
 	dimensions = 2;
