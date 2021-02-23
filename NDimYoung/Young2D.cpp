@@ -20,6 +20,8 @@ Young2D::Young2D(istream &is) : Young2D(0)
 	string dg;
 	cout << "Enter column heights, split by [SPACE]:" << endl;
 	char c;
+	cin.clear();
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	getline(is, dg);
 	vector<string> dgNms = split(dg, " ");
 	columns = vector<mainType>(dgNms.size());

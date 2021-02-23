@@ -40,9 +40,9 @@ int main(int argc, char* argv[])
 			cout << "Enter generation iterations" << endl;
 			int genCnt = 0;
 			cin >> genCnt;
-			ts.GenerateTables(genCnt);
+			ts.GenerateTablesFast(genCnt);
 			ofstream os("Tableaux.txt");
-			ts.ExportTables(os);
+			ts.ExportTablesFast(os);
 			os.close();
 		}
 	}
