@@ -6,7 +6,7 @@ using namespace std;
 typedef int tabType;
 
 //clones base form
-Tableaux2D::Tableaux2D(Young2D &base)
+Tableau2D::Tableau2D(Young2D &base)
 {
 	diag = base.Clone();
 	for (int i = 0; i < base.columns.size(); i++)
@@ -14,15 +14,17 @@ Tableaux2D::Tableaux2D(Young2D &base)
 		table.push_back(vector<tabType>(base.columns[i]));
 		diagN += base.columns[i];
 	}
+	reserveColumns = diag->columns;
+	diagNReserve = diagN;
 }
 
-Tableaux2D::~Tableaux2D()
+Tableau2D::~Tableau2D()
 {
 	table.clear();
 	delete diag;
 }
 
-mainType* Tableaux2D::GetRandomPointInDiag()
+mainType* Tableau2D::GetRandomPointInDiag()
 {
 	mainType* coord = new mainType[2];
 	int rndVal = rand() % diagN;
@@ -39,7 +41,7 @@ mainType* Tableaux2D::GetRandomPointInDiag()
 }
 
 //hookCornerCoord - max left-bottom hook cell (corner). isTerminal returns true, if the returned cell is terminal
-mainType* Tableaux2D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* isTerminal, bool destroySourceCoordArray)
+mainType* Tableau2D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* isTerminal, bool destroySourceCoordArray)
 {
 	mainType* result = new mainType[2];
 	int hookLen = (diag->columns[hookCornerCoord[0]] - hookCornerCoord[1]); //vertical hook part
@@ -74,41 +76,9 @@ mainType* Tableaux2D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* 
 	return result;
 }
 
-void Tableaux2D::CreateColorFile(mainType* hookCorner, int frame, bool ignoreHookCorner)
+void Tableau2D::ProcessOneHookwalk(bool createOutputFiles, int* fileFrame)
 {
-	ofstream os(string("frame-") + to_string(frame) + string(".txt"), ofstream::out);
-	for (int x = 0; x < table.size(); x++)
-		for (int y = 0; y < table[x].size(); y++)
-		{
-			os << x << " " << y;
-			if (!ignoreHookCorner&& hookCorner[0] == x && hookCorner[1] == y) //hook corner
-				os << " 0 " << 1;
-			else if (table[x][y] == 0) //if non-numbered
-			{
-				if (((hookCorner[0] == x && y > hookCorner[1]) || (hookCorner[1] == y && x > hookCorner[0]))) //hook
-					os << " 0 " << 2;
-				else	//normal not-numbered cell
-					os << " 0 " << 0;
-			}
-			else	//numbered (excluded) cell
-				os << " " << table[x][y] << " " << 3;
-			os << '\n';
-		}
-	os.close();
-}
-
-bool Tableaux2D::CoordsEqual(mainType* c1, mainType* c2, int len)
-{
-	while (len-- && *(c1) == *(c2))
-	{
-		c1++; c2++;
-	}
-	return len == -1;
-}
-
-void Tableaux2D::ProcessOneHookwalk(bool createOutputFiles, int *fileFrame)
-{
-	mainType* start = GetRandomPointInDiag(), *coord = NULL;
+	mainType* start = GetRandomPointInDiag(), * coord = NULL;
 	ofstream os;
 	if (createOutputFiles)
 		CreateColorFile(start, (*fileFrame)++, false);
@@ -131,19 +101,62 @@ void Tableaux2D::ProcessOneHookwalk(bool createOutputFiles, int *fileFrame)
 		CreateColorFile(coord, (*fileFrame)++, true);
 }
 
-void Tableaux2D::GenerateRandomTable(bool createColorFiles, bool reserveDiagram)
+void Tableau2D::CreateColorFile(mainType* hookCorner, int frame, bool ignoreHookCorner)
 {
-	Young2D *diagCopy = 0;
+	ofstream os(string("frame-") + to_string(frame) + string(".txt"), ofstream::out);
+	for (int x = 0; x < table.size(); x++)
+		for (int y = 0; y < table[x].size(); y++)
+		{
+			os << x << " " << y;
+			if (!ignoreHookCorner&& hookCorner[0] == x && hookCorner[1] == y) //hook corner
+				os << " 0 " << 1;
+			else if (table[x][y] == 0) //if non-numbered
+			{
+				if (((hookCorner[0] == x && y > hookCorner[1]) || (hookCorner[1] == y && x > hookCorner[0]))) //hook
+					os << " 0 " << 2;
+				else	//normal not-numbered cell
+					os << " 0 " << 0;
+			}
+			else	//numbered (excluded) cell
+				os << " " << table[x][y] << " " << 3;
+			os << '\n';
+		}
+	os.close();
+}
+
+bool Tableau2D::CoordsEqual(mainType* c1, mainType* c2, int len)
+{
+	while (len-- && *(c1) == *(c2))
+	{
+		c1++; c2++;
+	}
+	return len == -1;
+}
+
+void Tableau2D::GenerateRandomTable(bool createColorFiles, bool reserveDiagram)
+{
+	Young2D* diagCopy = 0;
 	if (reserveDiagram)
 		diagCopy = diag->Clone();
 	int n = 0;
 	while (diagN)
 		ProcessOneHookwalk(createColorFiles, &n);
 	if (reserveDiagram)
+	{
 		diag = diagCopy;
+		diagN = diagNReserve;
+	}
 }
 
-bool Tableaux2D::TablesEqual(vector<vector<tabType>> table1, vector<vector<tabType>> table2)
+vector<vector<tabType>> Tableau2D::ExtractTable()
+{
+	vector<vector<tabType>> result(table.size());
+	for (int i = 0; i < table.size(); i++)
+		result[i] = table[i];
+	return result; 
+}
+
+bool Tableau2D::TablesEqual(vector<vector<tabType>> table1, vector<vector<tabType>> table2)
 {
 	if (table1.size() == table2.size())
 		for (int i = 0; i < table1.size(); i++)
@@ -158,16 +171,68 @@ bool Tableaux2D::TablesEqual(vector<vector<tabType>> table1, vector<vector<tabTy
 	return true;
 }
 
-vector<vector<tabType>> Tableaux2D::ExtractTable()
+mainType* Tableau2D::GetRandomPointOnThisHookFast(mainType* hookCornerCoord, bool* isTerminal)
 {
-	vector<vector<tabType>> result(table.size());
-	for (int i = 0; i < table.size(); i++)
-		result[i] = table[i];
-	table.clear();
-	diagN = 0;
-	for (int i = 0; i < diag->columns.size(); i++) {
-		table.push_back(vector<tabType>(diag->columns[i]));
-		diagN += diag->columns[i];
+	//if is on top of column
+	if (diag->columns[hookCornerCoord[0]] == hookCornerCoord[1] + 1)
+	{
+		//in both cases this is the last cell
+		(*isTerminal) = true;
+		//cant move right
+		if (diag->columns.size() == hookCornerCoord[0] + 1 || diag->columns[hookCornerCoord[0] + 1] <= hookCornerCoord[1])
+			return hookCornerCoord;
+		else	//can only move right
+		{
+			do {
+				hookCornerCoord[0]++;
+			} while (diag->columns.size() != hookCornerCoord[0] + 1 && diag->columns[hookCornerCoord[0] + 1] > hookCornerCoord[1]);
+			return hookCornerCoord;
+		}
 	}
-	return result; 
+	else {
+		int rightSpace = 0;
+		while (diag->columns.size() != hookCornerCoord[0] + 1 + rightSpace && diag->columns[hookCornerCoord[0] + 1 + rightSpace] > hookCornerCoord[1])
+			rightSpace++;
+		//can only move up
+		if (!rightSpace)
+		{
+			hookCornerCoord[1] = diag->columns[hookCornerCoord[0]] - 1;
+			(*isTerminal) = true;
+			return hookCornerCoord;
+		}
+		else	//can move in both directions
+		{
+			int upSpace = diag->columns[hookCornerCoord[0]] - hookCornerCoord[1] - 1;
+			int move = 1 + rand() % (upSpace + rightSpace);
+			if (move > upSpace)	//move right
+				hookCornerCoord[0] += move - upSpace;
+			else //move up
+				hookCornerCoord[1] += move;
+		}
+	}
+	return hookCornerCoord;
+}
+
+void Tableau2D::ProcessOneHookwalkFast()
+{
+	mainType *coord = GetRandomPointInDiag();
+	bool isTerminal = false;
+	while (!isTerminal)
+		coord = GetRandomPointOnThisHookFast(coord, &isTerminal);
+	fastTable.push_back(coord[0]);
+	diag->columns[coord[0]]--;
+	diagN--;
+	delete coord;
+}
+
+vector<tabType> Tableau2D::GenerateRandomTableFast(bool reserveState)
+{
+	fastTable.clear();
+	while (diagN)
+		ProcessOneHookwalkFast();
+	if (reserveState) {
+		diagN = diagNReserve;
+		diag->columns = reserveColumns;
+	}
+	return fastTable;
 }

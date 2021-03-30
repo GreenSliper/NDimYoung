@@ -39,6 +39,9 @@
     <ClCompile Include="YoungNDim_SimpleNode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="CommonMethods.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="YoungNDim.h">
@@ -54,6 +57,12 @@
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="TableSet.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonMethods.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Tableau3D.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>
