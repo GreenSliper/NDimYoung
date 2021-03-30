@@ -62,5 +62,8 @@
     <ClInclude Include="CommonMethods.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="Tableau3D.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

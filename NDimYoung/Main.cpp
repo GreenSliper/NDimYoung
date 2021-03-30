@@ -1,4 +1,5 @@
 #include "Tableaux2D.h"
+#include "Tableau3D.h"
 #include "TableSet.h"
 #include "YoungNDim_SimpleNode.h"
 #include "CommonMethods.h"
@@ -27,6 +28,22 @@ int main(int argc, char* argv[])
 		printf("\n");
 	}*/
 	srand(0);
+
+	vector<Young2D*> young3d;
+	cout << "Enter 2d layer count\n";
+	int layerCnt = 0;
+	cin >> layerCnt;
+	for (int i = 0; i < layerCnt; i++)
+	{
+		young3d.push_back(new Young2D(cin));
+	}
+	TableSet3D tab(young3d);
+	int iterations, saveEvery;
+	cout << "Input total iteration count and save interval (in iteration count, ex: \"500 50\" "
+		<< "will generate total 500 tables, exporting results to file each 50 iterations\n";
+	cin >> iterations;
+	cin >> saveEvery;
+	tab.GenerateTablesAsync(iterations, "tables3d.txt", saveEvery);
 
 	if (argc == 1)
 	{

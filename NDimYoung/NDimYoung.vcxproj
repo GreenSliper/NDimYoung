@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClInclude Include="BitLine.h" />
     <ClInclude Include="CommonMethods.h" />
+    <ClInclude Include="Tableau3D.h" />
     <ClInclude Include="Tableaux2D.h" />
     <ClInclude Include="TableSet.h" />
     <ClInclude Include="YoungNDim.h" />
