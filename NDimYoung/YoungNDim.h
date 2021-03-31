@@ -48,6 +48,7 @@ public:
 	BitLine *oCorners;
 
 	Young2D(mainType startCubesInZeroPoint);
+	Young2D(string str);
 	Young2D(istream &is);
 	Young2D();
 

@@ -30,6 +30,14 @@ Young2D::Young2D(istream &is) : Young2D(0)
 		columns[i] = stoi(dgNms[i]);
 }
 
+Young2D::Young2D(string str) : Young2D(0)
+{
+	vector<string> dgNms = split(str, "-");
+	columns = vector<mainType>(dgNms.size());
+	for (int i = 0; i < dgNms.size(); i++)
+		columns[i] = stoi(dgNms[i]);
+}
+
 Young2D::Young2D(mainType startCubesInZeroPoint) {
 	dimensions = 2;
 	columns[0] = startCubesInZeroPoint;
