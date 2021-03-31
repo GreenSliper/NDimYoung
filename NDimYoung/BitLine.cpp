@@ -1,4 +1,5 @@
-#include "BitLine.h";
+#include "BitLine.h"
+#include <cstring>
 
 int BitBool::GetBit(int index)
 {
@@ -29,7 +30,7 @@ void BitLine::Resize(int newSize)
 
 void BitLine::CopyLineFrom(BitLine* other)
 {
-	memcpy(line, other->line, other->size);
+	std::memcpy(line, other->line, other->size);
 }
 
 int BitLine::GetBit(int index)

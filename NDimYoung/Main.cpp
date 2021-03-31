@@ -29,22 +29,6 @@ int main(int argc, char* argv[])
 	}*/
 	srand(0);
 
-	vector<Young2D*> young3d;
-	cout << "Enter 2d layer count\n";
-	int layerCnt = 0;
-	cin >> layerCnt;
-	for (int i = 0; i < layerCnt; i++)
-	{
-		young3d.push_back(new Young2D(cin));
-	}
-	TableSet3D tab(young3d);
-	int iterations, saveEvery;
-	cout << "Input total iteration count and save interval (in iteration count, ex: \"500 50\" "
-		<< "will generate total 500 tables, exporting results to file each 50 iterations\n";
-	cin >> iterations;
-	cin >> saveEvery;
-	tab.GenerateTablesAsync(iterations, "tables3d.txt", saveEvery);
-
 	if (argc == 1)
 	{
 		int res = 0;
@@ -61,6 +45,27 @@ int main(int argc, char* argv[])
 			ofstream os("Tableaux.txt");
 			ts.ExportTablesFast(os);
 			os.close();
+		}
+	}
+	else if (argc == 5)
+	{
+		bool tablegen3D = false;
+		int i;
+		for (i = 0; i < argc &&!tablegen3D; i++)
+			tablegen3D = (strcmp("-tablegen3D", argv[i]) == 0);
+		if (tablegen3D) {
+			vector<Young2D*> young3d;
+			vector<string> layers = split(string(argv[i++]), "|");
+			
+			for (int i = 0; i < layers.size(); i++)
+				young3d.push_back(new Young2D(layers[i]));
+			TableSet3D tab(young3d);
+			int iterations, saveEvery;
+			//cout << "Input total iteration count and save interval (in iteration count, ex: \"500 50\" "
+			//	<< "will generate total 500 tables, exporting results to file each 50 iterations\n";
+			iterations = atoi(argv[i++]);
+			saveEvery = atoi(argv[i++]);
+			tab.GenerateTablesAsync(iterations, "tables3d.txt", saveEvery);
 		}
 	}
 	bool infiniteGen = false, genTables = false;
