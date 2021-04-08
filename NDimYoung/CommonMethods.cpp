@@ -57,7 +57,8 @@ vector<vector<YoungNDim_SimpleNode*>> CreateGraph(YoungNDim_SimpleNode* rootDiag
 			levels[i].insert(levels[i].end(), children.begin(), children.end());
 			//go to next ancestor
 		}
-		levels[i - 1].clear();
+		if (exportOnFlyFileName[0] != '\0')
+			levels[i - 1].clear();
 		//this level won't be expanded
 		levels[i].shrink_to_fit();
 		//export on fly

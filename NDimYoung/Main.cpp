@@ -6,7 +6,7 @@
 
 using namespace std;
 
-
+const auto core_count = thread::hardware_concurrency();
 
 int main(int argc, char* argv[])
 {
@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 		children[lvl]->node->Print();
 		printf("\n");
 	}*/
-	srand(0);
+	srand(time(0));
 
 	if (argc == 1)
 	{
@@ -66,6 +66,110 @@ int main(int argc, char* argv[])
 			iterations = atoi(argv[i++]);
 			saveEvery = atoi(argv[i++]);
 			tab.GenerateTablesAsync(iterations, "tables3d.txt", saveEvery);
+		}
+	}
+	else if (argc == 6)
+	{
+		bool tablegen3D = false;
+		int i;
+		for (i = 0; i < argc && !tablegen3D; i++)
+			tablegen3D = (strcmp("-tablegen3D", argv[i]) == 0);
+		vector<future<void>> tasks;
+		if (tablegen3D)
+		{
+			int startLevel, endLevel, totalIterations, exportEvery;
+			startLevel = atoi(argv[i++]);
+			endLevel = atoi(argv[i++]);
+			totalIterations = atoi(argv[i++]);
+			exportEvery = atoi(argv[i++]);
+			cout << "Creating graph levels " << startLevel << " - " << endLevel << endl;
+			auto graph = CreateGraph(new YoungNDim_SimpleNode(new YoungNDim(1, 3)), endLevel);
+			for (int j = startLevel; j < endLevel; j++)
+			{
+				cout << "Processing level " << j << endl;
+				sort(graph[j].begin(), graph[j].end(),
+					[](YoungNDim_SimpleNode* l, YoungNDim_SimpleNode* r)
+					{   return *(l->dim) < *(r->dim);  });
+				
+				double targetDimPercents[] = {95, 90, 80, 70, 60, -1};
+
+				double* targPercent = targetDimPercents;
+				vector<YoungNDim_SimpleNode*> inspected;
+				if (graph[j].size() > 10)
+				{
+					bool added2d = false;
+					InfInt max = (*(graph[j][graph[j].size() - 1]->dim));
+					//cout <<"max: "<< *(graph[j][graph[j].size() - 1]->dim) << endl;
+					inspected.push_back(graph[j][graph[j].size() - 1]);
+					for (int k = graph[j].size() - 1; k > -1 && !added2d; k--)
+					{
+						auto diag = dynamic_cast<YoungNDim*>(graph[j][k]->node);
+						vector<Young2D*> layers2d;
+						for (int l = 0; l < diag->layers.size(); l++)
+							layers2d.push_back(dynamic_cast<Young2D*>(diag->layers[l]));
+						if (layers2d.size() == 1)
+							added2d = true;
+						else
+						{
+							bool allLayers1col = true;
+							for (int z = 0; z < layers2d.size() && allLayers1col; z++)
+								allLayers1col = (layers2d[z]->columns.size() == 1);
+							if ((added2d = allLayers1col) == false)
+							{
+								bool allLayersCols1 = true;
+								for (int z = 0; z < layers2d.size() && allLayersCols1; z++)
+									for (int m = 0; m < layers2d[z]->columns.size() && allLayersCols1; m++)
+										allLayersCols1 = (layers2d[z]->columns[m] == 1);
+								added2d = allLayersCols1;
+							}
+						}
+						if (added2d)
+							inspected.push_back(graph[j][k]);
+					}
+					for (int k = graph[j].size() - 1; k > -1 && *targPercent >= 0; k--)
+					{
+						//cout << *(graph[j][k]->dim) << endl;
+						if (max.toLong() * (*targPercent) * 0.01 > (graph[j][k]->dim)->toLong())
+						{
+							inspected.push_back(graph[j][k]);
+							targPercent++;
+						}
+					}
+				}
+				else
+					inspected = graph[j];
+				for (int k = 0; k < inspected.size(); k++)
+				{
+					if (*inspected[k]->dim < 2)
+						continue;
+					cout << "Generating tables for diagram: " << endl;
+					inspected[k]->node->Print(cout);
+					cout << endl;
+					cout << "dim = " << *inspected[k]->dim << "; " <<
+						*(inspected[k]->dim)*100.0/ *(inspected[0]->dim) <<"\% of max"<< endl;
+					auto diag = dynamic_cast<YoungNDim*>(inspected[k]->node);
+					vector<Young2D*> layers2d;
+					for (int l = 0; l < diag->layers.size(); l++)
+						layers2d.push_back(dynamic_cast<Young2D*>(diag->layers[l]));
+					stringstream ss;
+					inspected[k]->node->Print(ss);
+					string fileName = ss.str() + ".txt";
+					tasks.push_back(async([layers2d, totalIterations, fileName, exportEvery]
+						{ 
+							(new TableSet3D(layers2d))->GenerateTablesAsync(totalIterations, fileName.c_str(), exportEvery);
+						}
+					));
+					if (tasks.size() >= core_count)
+					{
+						int mx = tasks.size();
+						for (int z = 0; z < mx; z++)
+						{
+							tasks[0].get();
+							tasks.erase(tasks.begin());
+						}
+					}
+				}
+			}
 		}
 	}
 	bool infiniteGen = false, genTables = false;

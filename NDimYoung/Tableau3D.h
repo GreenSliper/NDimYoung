@@ -4,10 +4,11 @@
 #include <map>
 #include <thread>
 #include <future>
+#include <random>
 
 using namespace std;
 
-const auto processor_count = thread::hardware_concurrency();
+const auto processor_count = 1;// thread::hardware_concurrency();
 
 typedef int tabType;
 
@@ -50,7 +51,7 @@ public:
 	~Tableau3D();
 	mainType* GetRandomPointInDiag();
 	mainType* GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* isTerminal);
-	void ProcessOneHookwalk();
+	void ProcessOneHookwalk(vector<tabTypePair>& trace);
 	vector<tabTypePair> GenerateRandomTable(bool reserveState);
 	//vector<vector<tabType>> ExtractTable();
 };
@@ -82,10 +83,16 @@ Tableau3D::~Tableau3D()
 		delete diag[i];
 }
 
+int intRand(const int& min, const int& max) {
+	static thread_local std::mt19937 generator;
+	std::uniform_int_distribution<int> distribution(min, max);
+	return distribution(generator);
+}
+
 mainType* Tableau3D::GetRandomPointInDiag()
 {
 	mainType* coord = new mainType[3];
-	int rndVal = rand() % diagN;
+	int rndVal = intRand(0, diagN-1);
 	for(int j = 0; j < diag.size(); j++)
 		for (int i = 0; i < diag[j]->columns.size(); i++)
 			if (rndVal >= diag[j]->columns[i])
@@ -135,7 +142,7 @@ mainType* Tableau3D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* i
 		}
 		else //move x & y
 		{
-			int move = 1 + rand() % (xHook + yHook);
+			int move = intRand(1, xHook + yHook);// 1 + rand() % (xHook + yHook);
 			if (move > xHook)	//move y
 				hookCornerCoord[1] += move - xHook;
 			else				//move x
@@ -151,7 +158,7 @@ mainType* Tableau3D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* i
 			}
 			else //move x & z
 			{
-				int move = 1 + rand() % (xHook + zHook);
+				int move = intRand(1, xHook + zHook);// 1 + rand() % (xHook + zHook);
 				if (move > xHook)	//move z
 					hookCornerCoord[0] += move - xHook;
 				else				//move x
@@ -160,7 +167,7 @@ mainType* Tableau3D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* i
 		}
 		else if (xHook == 0) //move y & z
 		{
-			int move = 1 + rand() % (yHook + zHook);
+			int move = intRand(1, yHook + zHook);//1 + rand() % (yHook + zHook);
 			if (move > yHook)	//move z
 				hookCornerCoord[0] += move - yHook;
 			else				//move y
@@ -168,7 +175,7 @@ mainType* Tableau3D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* i
 		}
 		else //move x & y & z
 		{
-			int move = 1 + rand() % (xHook + yHook + zHook);
+			int move = intRand(1, xHook + yHook + zHook);// 1 + rand() % (xHook + yHook + zHook);
 			if (move > xHook)	//move y & z
 			{
 				move -= xHook;
@@ -183,13 +190,15 @@ mainType* Tableau3D::GetRandomPointOnThisHook(mainType* hookCornerCoord, bool* i
 	return hookCornerCoord;
 }
 
-void Tableau3D::ProcessOneHookwalk()
+void Tableau3D::ProcessOneHookwalk(vector<tabTypePair> &trace)
 {
 	mainType* coord = GetRandomPointInDiag();
 	bool isTerminal = false;
 	while (!isTerminal)
 		coord = GetRandomPointOnThisHook(coord, &isTerminal);
-	fastTable.push_back(tabTypePair(coord[0], coord[1]));
+	//fastTable.push_back(tabTypePair(coord[0], coord[1]));
+	int a = coord[0], b = coord[1];
+	trace.push_back(tabTypePair(a, b));
 	diag[coord[0]]->columns[coord[1]]--;
 	diagN--;
 	delete coord;
@@ -197,15 +206,17 @@ void Tableau3D::ProcessOneHookwalk()
 
 vector<tabTypePair> Tableau3D::GenerateRandomTable(bool reserveState)
 {
-	fastTable.clear();
+	//fastTable.clear();
+	vector<tabTypePair> res;
 	while (diagN)
-		ProcessOneHookwalk();
+		ProcessOneHookwalk(res);
 	if (reserveState) {
 		diagN = diagNReserve;
 		for(int i = 0; i < diag.size();i++)
 			diag[i]->columns = reserveColumns[i];
 	}
-	return fastTable;
+	return res;
+	//return fastTable;
 }
 
 class TableSet3D
@@ -261,12 +272,13 @@ void TableSet3D::GenerateTablesAsync(int count, const char* file, int exportEver
 	{
 		int cnt = min(exportEvery, count);
 
-		vector<future<map<vector<tabTypePair>, int>>> calcs;
+		/*vector<future<map<vector<tabTypePair>, int>>> calcs;
 		for (int i = 0; i < processor_count; i++)
 		{
-			TableSet3D* set = new TableSet3D(tableGenerator->diag);
-			calcs.push_back(async([set, cnt]
+			vector<Young2D*> dg = tableGenerator->diag;
+			calcs.push_back(async(launch::async, [dg, cnt]
 				{
+					TableSet3D* set = new TableSet3D(dg);
 					auto res = set->GenerateTables(cnt / processor_count);
 					delete set;
 					return res;
@@ -277,7 +289,10 @@ void TableSet3D::GenerateTablesAsync(int count, const char* file, int exportEver
 			auto mp = calcs[i].get();
 			for (auto elem : mp)
 				tableMap[elem.first] += elem.second;
-		}
+		}*/
+		auto mp = GenerateTables(cnt);
+		for (auto elem : mp)
+			tableMap[elem.first] += elem.second;
 		ofstream of(file);
 		ExportTables(tableMap, of);
 		of.close();
@@ -291,8 +306,8 @@ void TableSet3D::ExportTables(map<vector<tabTypePair>, int> tableMap, ostream& o
 	for (auto elem : tableMap)
 	{
 		os << i++;
-		for (int j = 0; j < elem.first.size(); j++)
-			os << elem.first[j];
+		//for (int j = 0; j < elem.first.size(); j++)
+		//	os << elem.first[j];
 		os << " " << elem.second << endl;
 	}
 }
