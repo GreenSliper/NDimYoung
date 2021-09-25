@@ -231,7 +231,7 @@ public:
 	/// Multithread version
 	/// </summary>
 	/// <param name="exportEvery">Export data via ExportTables every N generations</param>
-	void GenerateTablesAsync(int count, const char* file, int exportEvery = 100000);
+	void GenerateTablesAsync(int count, const char* file, int exportEvery = 100000, bool printInfo = false);
 	void ExportTables(map<vector<tabTypePair>, int> tableMap, ostream& os);
 };
 
@@ -264,7 +264,7 @@ map<vector<tabTypePair>, int> TableSet3D::GenerateTables(int count)
 	return tableMap;
 }
 
-void TableSet3D::GenerateTablesAsync(int count, const char* file, int exportEvery)
+void TableSet3D::GenerateTablesAsync(int count, const char* file, int exportEvery, bool printInfo)
 {
 	map<vector<tabTypePair>, int> tableMap;
 
@@ -296,6 +296,8 @@ void TableSet3D::GenerateTablesAsync(int count, const char* file, int exportEver
 		ofstream of(file);
 		ExportTables(tableMap, of);
 		of.close();
+		if (printInfo)
+			cout << "Exported to file " << string(file) << cnt << " tables";
 		count -= cnt;
 	}
 }

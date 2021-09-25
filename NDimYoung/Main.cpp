@@ -10,6 +10,31 @@ const auto core_count = thread::hardware_concurrency();
 
 int main(int argc, char* argv[])
 {
+	vector<future<void>> dgTsks;
+	string diag3Ds[] = {"2-2 2-2 2-2 1-1", "3-2-1 2-2-1 1-1-1", "5-2-1-1 2-1 1 1", "2-1-1-1 1-1-1-1 1-1-1 1-1"};
+	for (int i = 0; i < 4; i++)
+	{
+		string dg = diag3Ds[i];
+		vector<Young2D*> layers2d;
+		vector<string> layers = split(string(dg), " ");
+
+		for (int i = 0; i < layers.size(); i++)
+			layers2d.push_back(new Young2D(layers[i]));
+		int iterations, saveEvery;
+		iterations = 100000000;
+		saveEvery = 1000000;
+		dg += ".txt";
+		dgTsks.push_back(async([layers2d, iterations, dg, saveEvery]
+			{
+				(new TableSet3D(layers2d))->GenerateTablesAsync(iterations, (dg).c_str(), saveEvery, true);
+			}
+		));
+	}
+	for (int i = 0; i < dgTsks.size(); i++)
+	{
+		dgTsks[i].get();
+	}
+	return 0;
 	//MANIPULATING DIAGRAMS MANUALLY EXAMPLE:
 	/*
 	YoungNDim_SimpleNode* diag = new YoungNDim_SimpleNode(new YoungNDim(1, 4));
@@ -70,6 +95,7 @@ int main(int argc, char* argv[])
 	}
 	else if (argc == 6)
 	{
+		//-tablegen3D 10 13 10000000 2500000
 		bool tablegen3D = false;
 		int i;
 		for (i = 0; i < argc && !tablegen3D; i++)
@@ -94,9 +120,38 @@ int main(int argc, char* argv[])
 				double targetDimPercents[] = {95, 90, 80, 70, 60, -1};
 
 				double* targPercent = targetDimPercents;
-				vector<YoungNDim_SimpleNode*> inspected;
+				vector<YoungNDim_SimpleNode*> inspected = graph[j];
 				if (graph[j].size() > 10)
 				{
+					for (int k = 0; k < graph[j].size() && inspected.size() < 30; k++)
+					{
+						bool added2d = false;
+						auto diag = dynamic_cast<YoungNDim*>(graph[j][k]->node);
+						vector<Young2D*> layers2d;
+						for (int l = 0; l < diag->layers.size(); l++)
+							layers2d.push_back(dynamic_cast<Young2D*>(diag->layers[l]));
+						if (layers2d.size() == 1)
+							added2d = true;
+						else
+						{
+							bool allLayers1col = true;
+							for (int z = 0; z < layers2d.size() && allLayers1col; z++)
+								allLayers1col = (layers2d[z]->columns.size() == 1);
+							if ((added2d = allLayers1col) == false)
+							{
+								bool allLayersCols1 = true;
+								for (int z = 0; z < layers2d.size() && allLayersCols1; z++)
+									for (int m = 0; m < layers2d[z]->columns.size() && allLayersCols1; m++)
+										allLayersCols1 = (layers2d[z]->columns[m] == 1);
+								added2d = allLayersCols1;
+							}
+							if (added2d)
+								inspected.push_back(graph[j][k]);
+						}
+					}
+					//if ((*(graph[j][k]->dim)) > 40000 && (*(graph[j][k]->dim)) < 100000)
+					//	inspected.push_back(graph[j][k]);
+					/*
 					bool added2d = false;
 					InfInt max = (*(graph[j][graph[j].size() - 1]->dim));
 					//cout <<"max: "<< *(graph[j][graph[j].size() - 1]->dim) << endl;
@@ -135,9 +190,11 @@ int main(int argc, char* argv[])
 							targPercent++;
 						}
 					}
+					*/
 				}
 				else
 					inspected = graph[j];
+				cout << "diagram count" << inspected.size() + 1 << endl;
 				for (int k = 0; k < inspected.size(); k++)
 				{
 					if (*inspected[k]->dim < 2)
@@ -172,6 +229,7 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
+
 	bool infiniteGen = false, genTables = false;
 	int x = 0;
 	int graphDim = 4, lvls;

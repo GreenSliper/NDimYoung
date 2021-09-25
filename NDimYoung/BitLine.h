@@ -4,7 +4,7 @@ using namespace std;
 #pragma once
 
 //profit: ~7.5% memory
-#pragma pack(1)
+//pragma pack(1)
 typedef struct _bitBool
 {
 	unsigned int val : 1;
